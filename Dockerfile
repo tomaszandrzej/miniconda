@@ -8,23 +8,23 @@ RUN apt-get update \
     && rm miniconda.sh \
     && apt-get remove -y wget \
     && apt autoremove -y \
-    && groupadd conda \
-    && mkdir /notebooks /jupyter-config \
-    && chown -R :conda /miniconda /notebooks /jupyter-config \
-    && chmod -R 770 /miniconda /notebooks /jupyter-config \
-    && /miniconda/bin/conda init \
-    && PATH="/miniconda/bin:/miniconda/condabin:$PATH" \
+    && PATH="/miniconda/bin:$PATH" \
     && conda update -y conda \
-    && conda install -y jupyter nb_conda_kernels
+    && conda install -y jupyter nb_conda_kernels \
+    && groupadd -g 1001 conda \
+    && mkdir /notebooks /jupyter-config \
+    && chown -R :conda /miniconda /jupyter-config \
+    && chmod -R 770 /miniconda /jupyter-config
 
-ADD entrypoint.sh /
 
-RUN chown :root /entrypoint.sh \
-    && chmod +x /entrypoint.sh
+ADD entrypoint.sh nb_passwd.py /scripts/
+
+RUN chown -R root:conda /scripts \
+    && chmod -R 744 /scripts
 
 
 EXPOSE 8888
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/scripts/entrypoint.sh"]
 
 CMD ["jupyter notebook --no-browser --ip=0.0.0.0 --notebook-dir=/notebooks"]

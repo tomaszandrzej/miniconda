@@ -1,27 +1,41 @@
 #!/bin/bash
 
-echo 'PATH="/miniconda/bin:/miniconda/condabin:$PATH"' >> /etc/profile
+condainit='eval "$(/miniconda/bin/conda shell.bash hook)" && conda init'
+
 
 if [ -n "$USER" ] && [ "$USER" != "root" ]
  then
   echo "user set as $USER"
   useradd -m -s /bin/bash $USER
   usermod -a -G conda $USER
+  chown -R $USER /notebooks
   mkdir /home/$USER/.jupyter
-  su -l $USER -c "conda init && $@"
-  exit 0
 
-elif [ "$USER" = "root" ]
- then
-  echo "user set as root!"
-  echo "S1: $1"
-  su -l root -c "conda init && $@"
-  exit 0
+  if [ -n "$JPASS" ]
+   then
+    /scripts/nb_passwd.py $JPASS
+
+   if [ $? -eq 0 ]
+    then
+     echo "password aquired successfully, copying"
+     cp /jupyter-config/* /home/$USER/.jupyter/
+     chown -R $USER /home/$USER
+   fi
+  fi
+
+  exec su -l $USER -c "$condainit && $@"
+
 
 else
-  echo "user not set!"
-  echo "must set user with -e USER=[username]"
-  exit 1
 
+  if [ -n "$JPASS" ]
+   then
+    /scripts/nb_passwd.py $JPASS
+    echo "password aquired successfully, copying"
+    mkdir /root/.jupyter
+    cp /jupyter-config/* /root/.jupyter/
+    chown -R $USER /home/$USER
+    su -l root -c "$condainit && $@"
+  fi
 fi
 
