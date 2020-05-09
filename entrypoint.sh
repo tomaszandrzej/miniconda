@@ -1,41 +1,40 @@
 #!/bin/bash
 
-condainit='eval "$(/miniconda/bin/conda shell.bash hook)" && conda init'
+CONDAINIT='eval "$(/miniconda/bin/conda shell.bash hook)" && conda init'
+JCONF=/jupyter-config/jupyter_notebook_config.json
 
-
-if [ -n "$USER" ] && [ "$USER" != "root" ]
+if [ -n "$UID" ] && [ -n "$GID" ]
  then
-  echo "user set as $USER"
-  useradd -m -s /bin/bash $USER
-  usermod -a -G conda $USER
-  chown -R $USER /notebooks
+
+  if [ -z "$USER" ]
+   then
+    USER=conda
+  fi
+
+  groupadd -g $GID $USER
+  echo "creating user: $USER, uid: $UID, gid: $GID"
+  useradd -m -s /bin/bash -u $UID -g $GID $USER
+  echo "adding jupyter config"
   mkdir /home/$USER/.jupyter
 
-  if [ -n "$JPASS" ]
+  if [ ! -f $JCONF ] && [ -n "$JPASS" ]
    then
     /scripts/nb_passwd.py $JPASS
 
-   if [ $? -eq 0 ]
-    then
-     echo "password aquired successfully, copying"
-     cp /jupyter-config/* /home/$USER/.jupyter/
-     chown -R $USER /home/$USER
-   fi
+  elif [ ! -f $JCONF ] && [ -z "JPASS" ]
+   then
+    echo "neither -e JPASS= specified nor notebook config file given"
+    exit 1
   fi
 
-  exec su -l $USER -c "$condainit && $@"
-
+  echo "config received"
+  chown $USER:$USER /jupyter-config/*
+  cp /jupyter-config/* /home/$USER/.jupyter/
+  chown -R $USER /home/$USER
+  exec su -l $USER -c "$CONDAINIT && $@"
 
 else
-
-  if [ -n "$JPASS" ]
-   then
-    /scripts/nb_passwd.py $JPASS
-    echo "password aquired successfully, copying"
-    mkdir /root/.jupyter
-    cp /jupyter-config/* /root/.jupyter/
-    chown -R $USER /home/$USER
-    su -l root -c "$condainit && $@"
-  fi
+ echo "-e UID= or -e GID= not specified"
+ exit 1
 fi
 

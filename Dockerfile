@@ -11,20 +11,24 @@ RUN apt-get update \
     && PATH="/miniconda/bin:$PATH" \
     && conda update -y conda \
     && conda install -y jupyter nb_conda_kernels \
-    && groupadd -g 1001 conda \
-    && mkdir /notebooks /jupyter-config \
-    && chown -R :conda /miniconda /jupyter-config \
-    && chmod -R 770 /miniconda /jupyter-config
+    && chmod -R 777 /miniconda
+    #&& groupadd -g 1001 conda \
+    #&& mkdir /notebooks /jupyter-config \
+    #&& chown -R :conda /miniconda /jupyter-config \
+    #&& chmod -R 777 /miniconda /jupyter-config
 
 
 ADD entrypoint.sh nb_passwd.py /scripts/
 
-RUN chown -R root:conda /scripts \
-    && chmod -R 744 /scripts
+
+RUN mkdir /jupyter-config /notebooks \
+    && chmod -R 777 /jupyter-config /notebooks /scripts
 
 
 EXPOSE 8888
 
+
 ENTRYPOINT ["/scripts/entrypoint.sh"]
+
 
 CMD ["jupyter notebook --no-browser --ip=0.0.0.0 --notebook-dir=/notebooks"]
