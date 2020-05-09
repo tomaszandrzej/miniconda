@@ -12,10 +12,6 @@ RUN apt-get update \
     && conda update -y conda \
     && conda install -y jupyter nb_conda_kernels \
     && chmod -R 777 /miniconda
-    #&& groupadd -g 1001 conda \
-    #&& mkdir /notebooks /jupyter-config \
-    #&& chown -R :conda /miniconda /jupyter-config \
-    #&& chmod -R 777 /miniconda /jupyter-config
 
 
 ADD entrypoint.sh nb_passwd.py /scripts/
