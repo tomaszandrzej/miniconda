@@ -4,47 +4,42 @@ CONDAINIT='eval "$(/miniconda/bin/conda shell.bash hook)" && conda init'
 JCONF=/jupyter-config/jupyter_notebook_config.json
 
 uid=${id::4}
-gid=${id:5:}
+uid=${uid:-1000}
 
-echo "uid: $uid gid: $gid"
+gid=${id:5:4}
+gid=${gid:-1000}
+
+user=${user:-conda}
+
+echo "setting up container with:"
+echo "uid: $uid"
+echo "gid: $gid"
+echo "user: $user"
+
+groupadd -g $gid $user
+useradd -m -s /bin/bash -u $uid -g $gid $user
+mkdir /home/$user/.jupyter
 
 
-eval "$@"
-
-: '
-if [ -n "$UID" ] && [ -n "$GID" ]
+if [ ! -f $JCONF ] && [ -n "$pass" ]
  then
+  /scripts/nb_passwd.py $pass
 
-  if [ -z "$USER" ]
-   then
-    USER=conda
-  fi
+elif [ -f $JCONF ]
+ then
+  echo "using mounted jupyter config file"
+  echo "ignoring passphrase if given"
 
-  groupadd -g $GID $USER
-  echo "creating user: $USER, uid: $UID, gid: $GID"
-  useradd -m -s /bin/bash -u $UID -g $GID $USER
-  echo "adding jupyter config"
-  mkdir /home/$USER/.jupyter
+elif [ ! -f $JCONF ] && [ -z "$pass" ]
+ then
+  echo "FATAL: neither passphrase nor notebook config file given"
+  echo "FATAL: how do you want this to work?"
+  exit 1
 
-  if [ ! -f $JCONF ] && [ -n "$JPASS" ]
-   then
-    /scripts/nb_passwd.py $JPASS
-
-  elif [ ! -f $JCONF ] && [ -z "JPASS" ]
-   then
-    echo "neither -e JPASS= specified nor notebook config file given"
-    exit 1
-  fi
-
-  echo "config received"
-  chown $USER:$USER /jupyter-config/*
-  cp /jupyter-config/* /home/$USER/.jupyter/
-  chown -R $USER /home/$USER
-  exec su -l $USER -c "$CONDAINIT && $@"
-
-else
- echo "-e UID= or -e GID= not specified"
- exit 1
 fi
 
-'
+
+cp /jupyter-config/* /home/$user/.jupyter/
+chown -R $user:$user /home/$user
+
+exec su -l $user -c "$CONDAINIT && $@"

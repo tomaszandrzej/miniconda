@@ -15,7 +15,7 @@ if path.exists('/jupyter-config/jupyter_notebook_config.json'):
     exit(0)
 
 
-print('Generating notebook password')
+print('generating notebook password')
 
 nb_pass = passwd(argv[1])
 
