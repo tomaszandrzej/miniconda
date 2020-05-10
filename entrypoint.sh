@@ -31,8 +31,8 @@ else [ -f $JCONF ]
 
 fi
 
-
-cp /jupyter-config/* /home/$user/.jupyter/
+chown $user:$user $JCONF /jupyter-config/pass.txt
+cp $JCONF /home/$user/.jupyter/
 chown -R $user:$user /home/$user
 
 exec su -l $user -c "$CONDAINIT && $@"
