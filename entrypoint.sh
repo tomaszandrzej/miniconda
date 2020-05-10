@@ -21,20 +21,13 @@ useradd -m -s /bin/bash -u $uid -g $gid $user
 mkdir /home/$user/.jupyter
 
 
-if [ ! -f $JCONF ] && [ -n "$pass" ]
+if [ ! -f $JCONF ]
  then
   /scripts/nb_passwd.py $pass
 
-elif [ -f $JCONF ]
- then
+else [ -f $JCONF ]
   echo "using mounted jupyter config file"
   echo "ignoring passphrase if given"
-
-elif [ ! -f $JCONF ] && [ -z "$pass" ]
- then
-  echo "FATAL: neither passphrase nor notebook config file given"
-  echo "FATAL: how do you want this to work?"
-  exit 1
 
 fi
 

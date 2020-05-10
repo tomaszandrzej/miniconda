@@ -4,20 +4,24 @@ import json
 from os import path
 from sys import argv
 from notebook.auth import passwd
-
-
-if len(argv) == 1:
-    print('Password not given, exiting')
-    exit(1)
+from string import ascii_letters, digits
+from random import choices
 
 if path.exists('/jupyter-config/jupyter_notebook_config.json'):
     print('configuration file exists, skipping')
     exit(0)
 
+if len(argv) == 1:
+    print('generating random password')
+    password = ''.join(choices(ascii_letters + digits, k=8))
+    with open('/jupyter-config/pass.txt', 'w') as file:
+        file.write(password)
+    print('writing password to pass.txt in jupyter-config folder')
+else:
+    print('using provided password')
+    password = argv[1]
 
-print('generating notebook password')
-
-nb_pass = passwd(argv[1])
+nb_pass = passwd(password)
 
 print('creating jupyter notebook config file')
 
@@ -30,8 +34,7 @@ config = {
 	}
 
 with open('/jupyter-config/jupyter_notebook_config.json', 'w') as file:
-    json.dump(config, file)
+    json.dump(config, file, indent=4)
 
 
 exit(0)
-
