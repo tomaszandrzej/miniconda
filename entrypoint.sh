@@ -1,7 +1,9 @@
 #!/bin/bash
 
 CONDAINIT='eval "$(/miniconda/bin/conda shell.bash hook)" && conda init'
-JCONF=/jupyter-config/jupyter_notebook_config.json
+JCONF='/jupyter-config/jupyter_notebook_config.json'
+PASSF='/jupyter-config/pass.txt'
+
 
 uid=${id::4}
 uid=${uid:-1000}
@@ -11,10 +13,13 @@ gid=${gid:-1000}
 
 user=${user:-conda}
 
-echo "setting up container with:"
-echo "uid: $uid"
-echo "gid: $gid"
-echo "user: $user"
+echo "setting up the container with:"
+echo " uid: $uid"
+echo " gid: $gid"
+echo "ownership of files will set with those"
+echo "username within the container: $user"
+echo "this does not affect file ownership"
+
 
 groupadd -g $gid $user
 useradd -m -s /bin/bash -u $uid -g $gid $user
@@ -31,8 +36,17 @@ else [ -f $JCONF ]
 
 fi
 
-chown $user:$user $JCONF /jupyter-config/pass.txt
+
+if [ -f $PASSF ]
+ then
+ chown $user:$user $PASSF
+
+fi
+
+chown $user:$user $JCONF
 cp $JCONF /home/$user/.jupyter/
 chown -R $user:$user /home/$user
+
+echo "starting up, conda init messages:"
 
 exec su -l $user -c "$CONDAINIT && $@"
