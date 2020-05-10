@@ -8,7 +8,7 @@ from string import ascii_letters, digits
 from random import choices
 
 if path.exists('/jupyter-config/jupyter_notebook_config.json'):
-    print('configuration file exists, skipping')
+    print('jupyter config file found')
     exit(0)
 
 if len(argv) == 1:
