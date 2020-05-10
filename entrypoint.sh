@@ -3,6 +3,15 @@
 CONDAINIT='eval "$(/miniconda/bin/conda shell.bash hook)" && conda init'
 JCONF=/jupyter-config/jupyter_notebook_config.json
 
+uid=${id::4}
+gid=${id:5:}
+
+echo "uid: $uid gid: $gid"
+
+
+eval "$@"
+
+: '
 if [ -n "$UID" ] && [ -n "$GID" ]
  then
 
@@ -38,3 +47,4 @@ else
  exit 1
 fi
 
+'
